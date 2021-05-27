@@ -6,6 +6,9 @@ Created on Thu May 27 14:50:20 2021
 @author: lagree_emmanuel
 """
 
+""" En fait l'exécution du programme est très courte : ça prend deux à trois minutes
+Peut-être avons-nous été méchants à raison, qui sait ? """
+
 import numpy as np
 import matplotlib.pyplot as plt
 
