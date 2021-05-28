@@ -3,11 +3,13 @@
 """
 Created on Thu May 27 14:50:20 2021
 
-@author: lagree_emmanuel
+@authors: lagree_emmanuel & marion_antoine
+
+Final project : Computational Neuroscience methods (Universite de Paris, ENS Paris)
+This scrip implements Fig2 of Sussilo & Abbott (2009, *Generating Coherent patterns of
+Activity from Chaotic Neural Networks) 
 """
 
-""" En fait l'exécution du programme est très courte : ça prend deux à trois minutes
-Peut-être avons-nous été méchants à raison, qui sait ? """
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -21,13 +23,15 @@ p_z = 1
 g_Gz = 1
 g_GF = 0
 alpha = 1
-N_l = 0
 tau = 10
 
 def define_initial_weights(N_G, p_z):  
     return np.random.normal(0, np.sqrt(1/N_G), N_G)
 
 def define_connection_matrix_J(N, proba):
+    """ Given the size and a probability for each entry to be set to zero,
+    returns a N*N random matrix. Used to define J_GG """
+    
     J = np.random.normal(0,np.sqrt(1/(N*proba)), [N, N])
     phi = lambda x : x if np.random.random() < proba else float(0) # Sets x to zero with a probability 1 - proba, else does nothing
     set_to_zero = np.vectorize(phi)
@@ -49,17 +53,12 @@ def update_x_t_by_euler_method(x, r, z, dt, tau, N_G, g_GG, J_GG, g_Gz, J_Gz):
 def compute_z(w, r):
     """ w and r as numpy arrays of same size. They are the weights and the 
     firing rates at time t. The function returns the dot
-    product of the two, which is the output of the network)"""
+    product of the two, which is the output of the network"""
     return np.dot(w, r)
 
 def compute_error(w, r, f):
     """ The function returns the error (scalar)"""
     return np.dot(w, r) - f
-
-def check_decreasing_error(e_minus, e_plus):
-    if abs(e_plus) <= abs(e_minus):
-        return True
-    return False
 
 def modification_rule_weights(w, e_minus, P, r):
     """ w, e_minus and r are column arrays, P is a matrix 
@@ -85,7 +84,9 @@ J_GG = define_connection_matrix_J(N_G, p_GG)
 J_Gz = np.random.uniform(-1, 1, N_G)
 
 def computations(index, Fi):
-    """ This function computes the activity of the neurons for one target function (Fi), updates the weights during the training and stores everything we are interested in. It is the core of the program. """
+    """ This function computes the activity of the neurons for one target 
+    function (Fi), updates the weights during the training and stores
+    everything we are interested in. It is the core of the program. """
     
     Fx=[]
     Fy=[]
@@ -145,16 +146,16 @@ def computations(index, Fi):
         for j in range(0,4):
             W[j][i]=w[j]
             X[j][i]=x[j]
-
+        """
         Pr = np.dot(P, r)
         a = np.dot(r, Pr)
         e_plus = e_minus*(1-a)
-        
+        """
     print('\n') 
     return Z, F, Fx, Fy, DW, W, X
 
 def settings_all_plots(d=D):
-    """ Rather than rewriting this everytime"""
+    """ Settings we use for every plot """
     plt.axvline(d/4, -2, 2, color = 'gray', linewidth = 0.7)
     plt.axvline(3*d/4, -2, 2, color = 'gray', linewidth = 0.7)
     plt.xlabel('Time (ms)')
@@ -162,17 +163,15 @@ def settings_all_plots(d=D):
     plt.legend()
 
 def display_result_one_function(Z, F, Fx, Fy, DW, W, X, function_name, s_a_p=settings_all_plots):
+    """ This function displays the results obtained by computations() :
+        it is called for each of the three functions we target """
     
-    residu=[]
-    for sortie,target in zip(Z,F):
-        residu.append(np.abs(sortie-target))
     
     # Main plot
     plt.figure(figsize = (16,4))
     plt.plot(time,Z, color = 'red', label = 'Output')
     plt.plot(Fx,Fy, color = 'blue', label = 'Target')
     plt.plot(time,DW, color = 'green', label = 'variation of weights')
-    #plt.plot(time,residu, label='residu')
     plt.title('Evolution of the network output over time. Target is '+function_name)
     s_a_p()
     plt.yticks([])
@@ -183,6 +182,7 @@ def display_result_one_function(Z, F, Fx, Fy, DW, W, X, function_name, s_a_p=set
     for i in range(0,4):
         plt.plot(W[i], label= 'Weight #'+str(i+1))
     s_a_p()
+    plt.title("Evolution of four specific weights")
     plt.show()
 
     # Plot the activity of four specific activities
@@ -191,6 +191,7 @@ def display_result_one_function(Z, F, Fx, Fy, DW, W, X, function_name, s_a_p=set
         plt.plot(np.array(X[i]) + 5*i, label= 'Neuron #'+str(i+1))
     s_a_p()
     plt.yticks([])
+    plt.title("Evolution of four specific neurons")
     plt.show()
     
 
@@ -201,7 +202,7 @@ def sin(t, period = 600):
 
 def triangle(t, period = 600):
     """triangle function"""
-    a = 1/200
+    a = 3/period
     b = period/4*a
     j = t%period - period/2
     return a*j+b if j<0 else -a*j+b
